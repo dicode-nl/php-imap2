@@ -726,6 +726,14 @@ if (!function_exists('imap_search')) {
 if (!function_exists('imap2_search')) {
     function imap2_search($imap, $criteria, $flags = SE_FREE, $charset = "")
     {
+        if (IMAP2_RETROFIT_MODE && is_resource($imap) && get_resource_type($imap) == 'imap') {
+            if (empty($charset)) {
+                return imap_search($imap, $criteria, $flags);
+            } else {
+                return imap_search($imap, $criteria, $flags, $charset);
+            }
+        }
+        
         return Message::search($imap, $criteria, $flags, $charset);
     }
 }
@@ -742,6 +750,10 @@ if (!function_exists('imap_headers')) {
 if (!function_exists('imap2_headers')) {
     function imap2_headers($imap)
     {
+        if (IMAP2_RETROFIT_MODE && is_resource($imap) && get_resource_type($imap) == 'imap') {
+            return imap_headers($imap);
+        }
+
         return Message::headers($imap);
     }
 }
@@ -798,6 +810,14 @@ if (!function_exists('imap_sort')) {
 if (!function_exists('imap2_sort')) {
     function imap2_sort($imap, $criteria, $reverse, $flags = 0, $searchCriteria = null, $charset = null)
     {
+        if (IMAP2_RETROFIT_MODE && is_resource($imap) && get_resource_type($imap) == 'imap') {
+            if (empty($charset)) {
+                return imap_sort($imap, $criteria, $reverse, $flags, $searchCriteria);
+            } else {
+                return imap_sort($imap, $criteria, $reverse, $flags, $searchCriteria, $charset);
+            }
+        }
+        
         return Message::sort($imap, $criteria, $reverse, $flags, $searchCriteria, $charset);
     }
 }
@@ -1070,6 +1090,10 @@ if (!function_exists('imap_undelete')) {
 if (!function_exists('imap2_undelete')) {
     function imap2_undelete($imap, $messageNums, $flags = 0)
     {
+        if (IMAP2_RETROFIT_MODE && is_resource($imap) && get_resource_type($imap) == 'imap') {
+            return imap_undelete($imap, $messageNums, $flags);
+        }
+
         return Message::undelete($imap, $messageNums, $flags);
     }
 }

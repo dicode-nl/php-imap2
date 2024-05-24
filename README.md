@@ -1,5 +1,15 @@
 <div align="center">
 
+# ⭐ Give me a star, please! ⭐
+
+<img src="https://raw.githubusercontent.com/francescobianco/gif/main/images/give-stars-h192.gif" /><img src="https://raw.githubusercontent.com/francescobianco/gif/main/images/push-button-h192.gif" />
+
+</div>
+
+---
+
+<div align="center">
+
 ![PHP IMAP2](docs/logo.png)
 
 # PHP IMAP2
@@ -38,8 +48,15 @@ Scope: https://mail.google.com/
 
 ## Sandbox
 
-- Gmail Demo - <https://phpsandbox.io/e/x/zwauf?layout=EditorPreview&defaultPath=%2F&theme=dark&showExplorer=no&openedFiles=>
+- [Gmail Demo](https://replit.com/@frabik/PHP-IMAP2-Google-Demo?v=1#main.php)
 - Outlook Demo - **COMING SOON**
+
+
+## Contributors
+
+- [dicode-nl](https://github.com/dicode-nl)
+- [glensc](https://github.com/glensc)
+- [bago](https://github.com/bago)
 
 ## Other links 
 

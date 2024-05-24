@@ -16,7 +16,7 @@ class HeaderInfo
 
     public static function fromMessage($message, $defaultHost)
     {
-        file_put_contents('t3.json', json_encode($message, JSON_PRETTY_PRINT));
+        #file_put_contents('t3.json', json_encode($message, JSON_PRETTY_PRINT));
 
         $to = Functions::writeAddressFromEnvelope($message->envelope[5]);
         $cc = Functions::writeAddressFromEnvelope($message->envelope[6]);
@@ -49,10 +49,10 @@ class HeaderInfo
             'sender' => self::parseAddressList($sender, $defaultHost),
             'Recent' => ' ',
             'Unseen' => isset($message->flags['SEEN']) && $message->flags['SEEN'] ? ' ' : 'U',
-            'Flagged' => ' ',
-            'Answered' => ' ',
-            'Deleted' => ' ',
-            'Draft' => ' ',
+            'Flagged' => empty($message->flags['FLAGGED']) ? ' ' : 'F',
+            'Answered' => empty($message->flags['ANSWERED']) ? ' ' : 'A',
+            'Deleted' => empty($message->flags['DELETED']) ? ' ' : 'X',
+            'Draft' => empty($message->flags['DRAFT']) ? ' ' : 'D',
             'Msgno' => str_pad($message->id, 4, ' ', STR_PAD_LEFT),
             'MailDate' => self::sanitizeMailDate($message->internaldate),
             'Size' => strval($message->size),

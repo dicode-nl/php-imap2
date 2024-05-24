@@ -101,6 +101,9 @@ test-fetch-structure:
 test-header-info:
 	@docker-compose run --rm phpunit tests --filter CompatibilityTest::testHeaderInfo
 
+test-headers:
+	@docker-compose run --rm phpunit tests --filter CompatibilityTest::testHeaders
+
 test-num-msg:
 	@docker-compose run --rm phpunit tests --filter CompatibilityTest::testNumMsg
 
@@ -121,6 +124,9 @@ test-delete-mailbox:
 
 test-body-structure:
 	@docker-compose run --rm phpunit tests --filter BodyStructureTest::testFetchStructure
+
+test-search:
+	@docker-compose run --rm phpunit tests --filter SearchTest
 
 test-timeout:
 	@docker-compose run --rm phpunit tests --filter XoauthTest::testTimeout

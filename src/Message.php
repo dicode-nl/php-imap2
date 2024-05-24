@@ -13,27 +13,37 @@ namespace Javanile\Imap2;
 
 class Message
 {
+    /**
+     * Returns an array of messages matching the given search criteria.
+     *
+     * @param $imap
+     * @param $criteria
+     * @param $flags
+     * @param $charset
+     *
+     * @return array|false|mixed
+     */
     public static function search($imap, $criteria, $flags = SE_FREE, $charset = "")
     {
-        if (is_a($imap, Connection::class)) {
-            $client = $imap->getClient();
-            #$client->setDebug(true);
-
-            $result = $client->search($imap->getMailboxName(), $criteria, $flags & SE_UID);
-
-            if (empty($result->count())) {
-                return false;
-            }
-
-            $messages = $result->get();
-            foreach ($messages as &$message) {
-                $message = is_numeric($message) ? intval($message) : $message;
-            }
-
-            return $messages;
+        if (!is_a($imap, Connection::class)) {
+            return Errors::invalidImapConnection(debug_backtrace(), 1, false);
         }
 
-        return imap_search($imap, $criteria, $flags, $charset);
+        $client = $imap->getClient();
+        #$client->setDebug(true);
+
+        $result = $client->search($imap->getMailboxName(), $criteria, $flags & SE_UID);
+
+        if (empty($result->count())) {
+            return false;
+        }
+
+        $messages = $result->get();
+        foreach ($messages as &$message) {
+            $message = is_numeric($message) ? intval($message) : $message;
+        }
+
+        return $messages;
     }
 
     public static function sort($imap, $criteria, $reverse, $flags = 0, $searchCriteria = null, $charset = null)
@@ -69,7 +79,7 @@ class Message
         #$client->setDebug(true);
 
         $messages = $client->fetch($imap->getMailboxName(), $messageNum, false, [
-            'BODY[HEADER.FIELDS (SUBJECT FROM TO CC REPLY-TO DATE SIZE REFERENCES)]',
+            'BODY.PEEK[HEADER.FIELDS (SUBJECT FROM TO CC REPLY-TO DATE SIZE REFERENCES)]',
             'ENVELOPE',
             'INTERNALDATE',
             'UID',
@@ -87,22 +97,59 @@ class Message
         }
     }
 
-    public static function headers($imap, $messageNum, $fromLength = 0, $subjectLength = 0, $defaultHost = null)
+    public static function headers($imap)
     {
-        if (is_a($imap, Connection::class)) {
-            $client = $imap->getClient();
-            #$client->setDebug(true);
-
-            $messages = $client->fetch($imap->getMailboxName(), $messageNum, false, ['BODY['.$section.']']);
-
-            if ($section) {
-                return $messages[$messageNum]->bodypart[$section];
-            }
-
-            return $messages[$messageNum]->body;
+        if (!is_a($imap, Connection::class)) {
+            return Errors::invalidImapConnection(debug_backtrace(), 1, false);
         }
 
-        return imap_headerinfo($imap, $messageNum, $fromLength = 0, $subjectLength = 0);
+        $client = $imap->getClient();
+        #$client->setDebug(true);
+
+        $status = $client->status($imap->getMailboxName(), ['MESSAGES']);
+        if (empty($status['MESSAGES'])) {
+            return [];
+        }
+
+        $sequence = '1:'.intval($status['MESSAGES']);
+        $messages = $client->fetch($imap->getMailboxName(), $sequence, false, [
+            'BODY.PEEK[HEADER.FIELDS (SUBJECT FROM TO CC REPLYTO MESSAGEID DATE SIZE REFERENCES)]',
+            #'UID',
+            'FLAGS',
+            'INTERNALDATE',
+            'RFC822.SIZE',
+            #'ENVELOPE',
+            'RFC822.HEADER'
+        ]);
+
+        if (empty($messages)) {
+            return [];
+        }
+
+        $headers = [];
+        foreach ($messages as $message) {
+            $from = ' ';
+            if ($message->from != 'no_host') {
+                $from = imap_rfc822_parse_adrlist($message->from, 'no_host');
+                $from = isset($from[0]->personal) ? $from[0]->personal : $message->from;
+            }
+
+            $date = explode(' ', $message->internaldate);
+            $subject = empty($message->subject) ? ' ' : $message->subject;
+            $unseen = empty($message->flags['SEEN']) ? 'U' : ' ';
+            $flagged = empty($message->flags['FLAGGED']) ? ' ' : 'F';
+            $answered = empty($message->flags['ANSWERED']) ? ' ' : 'A';
+            $draft = empty($message->flags['DRAFT']) ? ' ' : 'D';
+            $deleted = empty($message->flags['DELETED']) ? ' ' : 'X';
+
+            $header = ' ' . $unseen . $flagged . $answered . $draft . $deleted . ' '
+                    . str_pad($message->id, 3, ' ', STR_PAD_LEFT) . ')' . $date[0] .' ' . str_pad($from, 20, ' ') . ' '
+                    . substr($subject, 0, 25) . ' (' . $message->size . ' chars)';
+
+            $headers[] = $header;
+        }
+
+        return $headers;
     }
 
     public static function body($imap, $messageNum, $flags = 0)
@@ -130,7 +177,8 @@ class Message
         $client = $imap->getClient();
         #$client->setDebug(true);
 
-        $messages = $client->fetch($imap->getMailboxName(), $messageNum, false, ['BODY['.$section.']']);
+        $isUid = boolval($flags & FT_UID);
+        $messages = $client->fetch($imap->getMailboxName(), $messageNum, $isUid, ['BODY['.$section.']']);
 
         if (empty($messages)) {
             trigger_error(Errors::badMessageNumber(debug_backtrace(), 1), E_USER_WARNING);
@@ -180,7 +228,7 @@ class Message
     {
         if (is_a($imap, Connection::class)) {
             $client = $imap->getClient();
-           # $client->setDebug(true);
+            #$client->setDebug(true);
 
             $messages = $client->fetch($imap->getMailboxName(), $messageNum, false, ['BODY['.$section.']']);
 
